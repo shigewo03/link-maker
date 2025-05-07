@@ -163,6 +163,7 @@
         function saveLinks() {
             try {
                 localStorage.setItem('affiliateLinks', JSON.stringify(links));
+                console.log('Links saved:', links);
             } catch (e) {
                 console.error('Failed to save links to localStorage:', e);
             }
@@ -181,7 +182,7 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 const imageSrc = e.target.result;
-                const id = (links.length + 1).toString(); // 文字列ID
+                const id = (links.length + 1).toString();
                 links.push({ id, imageSrc, linkUrl });
                 console.log('Added link:', { id, imageSrc, linkUrl });
                 saveLinks();
