@@ -152,15 +152,25 @@
     </div>
 
     <script>
-        let links = JSON.parse(localStorage.getItem('affiliateLinks')) || [];
+        let links = [];
+        try {
+            links = JSON.parse(localStorage.getItem('affiliateLinks')) || [];
+        } catch (e) {
+            console.error('Failed to load links from localStorage:', e);
+            localStorage.removeItem('affiliateLinks');
+        }
 
         function saveLinks() {
-            localStorage.setItem('affiliateLinks', JSON.stringify(links));
+            try {
+                localStorage.setItem('affiliateLinks', JSON.stringify(links));
+            } catch (e) {
+                console.error('Failed to save links to localStorage:', e);
+            }
         }
 
         function addLink() {
             const imageUpload = document.getElementById('imageUpload');
-            const linkUrl = document.getElementById('linkUrl').value;
+            const linkUrl = document.getElementById('linkUrl').value.trim();
             const file = imageUpload.files[0];
 
             if (!file || !linkUrl) {
@@ -171,7 +181,7 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 const imageSrc = e.target.result;
-                const id = links.length + 1;
+                const id = (links.length + 1).toString(); // 文字列ID
                 links.push({ id, imageSrc, linkUrl });
                 console.log('Added link:', { id, imageSrc, linkUrl });
                 saveLinks();
@@ -198,32 +208,36 @@
             links.forEach(link => {
                 const linkItem = document.createElement('div');
                 linkItem.className = 'link-item';
+                const shareUrl = `${window.location.origin}${window.location.pathname}?id=${link.id}`;
                 linkItem.innerHTML = `
                     <a href="${link.linkUrl}" target="_blank">
                         <img src="${link.imageSrc}" alt="カスタム画像">
                     </a>
                     <a href="${link.linkUrl}" target="_blank">${link.linkUrl}</a>
-                    <p>シェアURL: <a href="${window.location.href}?id=${link.id}" target="_blank">${window.location.href}?id=${link.id}</a></p>
-                    <button class="delete-btn" onclick="deleteLink(${link.id})">削除</button>
+                    <p>シェアURL: <a href="${shareUrl}" target="_blank">${shareUrl}</a></p>
+                    <button class="delete-btn" onclick="deleteLink('${link.id}')">削除</button>
                 `;
                 linkList.appendChild(linkItem);
             });
         }
 
         // リダイレクト処理
-        window.onload = function() {
+        document.addEventListener('DOMContentLoaded', function() {
             const urlParams = new URLSearchParams(window.location.search);
             const id = urlParams.get('id');
             if (id) {
-                const link = links.find(l => l.id == id);
+                console.log('Checking redirect for id:', id);
+                const link = links.find(l => l.id === id);
                 if (link) {
+                    console.log('Redirecting to:', link.linkUrl);
                     window.location.href = link.linkUrl;
                 } else {
                     console.log('Link not found for id:', id);
+                    alert('指定されたリンクが見つかりません。新しいリンクを作ってみて！');
                 }
             }
             renderLinks();
-        };
+        });
     </script>
 </body>
 </html>
